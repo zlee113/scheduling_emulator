@@ -3,7 +3,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#define MAX_TASKS 10
+#define MAX_TASKS (10U)
+#define ACT (1U)
 
 struct task_par {
   int arg;            // task index
@@ -16,7 +17,7 @@ struct task_par {
   struct timespec dl; // absolute deadline
   int dmiss;          // deadline miss counter
   sem_t asem;         // activation semaphore
-  pthread_t tid;        // thread identifier
+  pthread_t tid;      // thread identifier
 };
 
 void ptask_init(int policy);
@@ -45,21 +46,19 @@ void wait_for_task_end(int id);
 
 int deadline_miss(int id);
 
-int get_task_index(void* arg);
+int get_task_index(void *arg);
 
-void task_get_period(int id);
+int task_get_period(int id);
 
-void task_get_period(int id);
+int task_get_deadline(int id);
 
-void task_get_deadline(int id);
+void task_get_atime(int id, struct timespec *at);
 
-void task_get_atime(int id);
+void task_get_adline(int id, struct timespec *ad);
 
-void task_get_adline(int id);
+void task_set_period(int id, int period);
 
-void task_set_period(int id);
-
-void task_set_deadline(int id);
+void task_set_deadline(int id, int deadline);
 
 /**
  * @brief Function to get the current system time
@@ -67,5 +66,3 @@ void task_set_deadline(int id);
  * @param unit The time unit for system time
  */
 long get_systime(int unit);
-
-

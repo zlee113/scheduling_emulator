@@ -1,6 +1,5 @@
 #include "ptask.h"
 #include "timespec_helpers.h"
-#include <ctime>
 #include <sched.h>
 #include <semaphore.h>
 
@@ -8,16 +7,16 @@
 struct task_par tp[MAX_TASKS] = {0};
 
 /* Global timing variable */
-struct timespec ptask_t0;
+struct timespec ptask_t0 = {0};
 
 /* Global policy variable */
 int ptask_policy;
 
-void ptask_init(int policy){
+void ptask_init(int policy) {
   ptask_policy = policy;
   clock_gettime(CLOCK_MONOTONIC, &ptask_t0);
 
-  for (int i=0; i<MAX_TASKS; i++)
+  for (int i = 0; i < MAX_TASKS; i++)
     sem_init(&tp[i].asem, 0, 0);
 }
 
@@ -57,39 +56,51 @@ int get_task_index(void *arg) {
   return tpar->arg;
 }
 
-void wait_for_activation(int id){
+void wait_for_activation(int id) {
   struct timespec t;
 
-  sem_wait(&tp[id].asem)
+  sem_wait(&tp[id].asem);
 
   clock_gettime(CLOCK_MONOTONIC, &t);
   time_copy(&(tp[id].at), t);
   time_copy(&(tp[id].dl), t);
-  time_copy(&(tp[id].at), tp[id].period);
-  time_copy(&(tp[id].dl), tp[id].deadline);
-} 
-
-void task_activate(int id){
-  sem_post(&tp[id].asem);
+  time_add_ms(&(tp[id].at), tp[id].period);
+  time_add_ms(&(tp[id].dl), tp[id].deadline);
 }
 
-int deadline_miss(int id){
-  struct timespec now;
-  clock_get_time(CLOCK_MONOTONIC, &now);
+void task_activate(int id) { sem_post(&tp[id].asem); }
 
-  if(time_cmp(now, tp[id].dl) > 0){
+int deadline_miss(int id) {
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+
+  if (time_cmp(now, tp[id].dl) > 0) {
     tp[id].dmiss++;
     return 1;
   }
   return 0;
 }
 
-int wait_for_period(int id){
+int wait_for_period(int id) {
   clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &(tp[id].at), NULL);
 
   time_add_ms(&(tp[id].at), tp[id].period);
   time_add_ms(&(tp[id].dl), tp[id].period);
 }
+
+void wait_for_task_end(int id);
+
+int task_get_period(int id) { return tp[id].period; }
+
+int task_get_deadline(int id) { return tp[id].deadline; }
+
+void task_get_attime(int id, struct timespec *at) { time_copy(at, tp[id].at); }
+
+void task_get_adline(int id, struct timespec *dl) { time_copy(dl, tp[id].dl); }
+
+void task_set_period(int id, int period) { tp[id].period = period; }
+
+void task_set_deadline(int id, int deadline) { tp[id].deadline = deadline; }
 
 long get_systime(int unit) {
   struct timespec t;
@@ -112,7 +123,7 @@ long get_systime(int unit) {
   }
 
   clock_gettime(CLOCK_MONOTONIC, &t);
-  tu = (t.tv_sec - ptaskt0.tv_sec) * mul;
-  tu += (t.tv_nsec - ptaskt0.tv_nsec) / div;
+  tu = (t.tv_sec - ptask_t0.tv_sec) * mul;
+  tu += (t.tv_nsec - ptask_t0.tv_nsec) / div;
   return tu;
 }
