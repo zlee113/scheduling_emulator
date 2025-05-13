@@ -41,9 +41,18 @@ int task_create(void *(*task)(void *), int index, int period, int deadline,
   pthread_attr_setschedparam(&myatt, &mypar);
 
   tret = pthread_create(&tp[index].tid, &myatt, task, (void *)(&tp[index]));
+  printf("Task %d created with TID %ld\n", index, (long)tp[index].tid);
 
-  if (act_flag == ACT)
+  if (tret != 0) {
+    printf("Error creating thread %d, error code: %d, %s\n", index, tret,
+           strerror(tret));
+    return tret; // Return error code
+  }
+
+  if (act_flag == ACT) {
     task_activate(index);
+    printf("Task %d activated.\n", index);
+  }
 
   return tret;
 }
