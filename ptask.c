@@ -23,6 +23,8 @@ int task_create(void *(*task)(void *), int index, int period, int deadline,
   struct sched_param mypar;
   int tret;
 
+  printf("Creating task at index: %d\n", index);
+
   if (index >= MAX_TASKS)
     return -1;
 

@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sched.h>
+#include <stdio.h>
 
 #define MAX_TASKS (10U)
 #define ACT (1U)
