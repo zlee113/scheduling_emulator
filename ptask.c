@@ -1,7 +1,4 @@
 #include "ptask.h"
-#include "timespec_helpers.h"
-#include <sched.h>
-#include <semaphore.h>
 
 /* Global variation for array holding every task */
 struct task_par tp[MAX_TASKS] = {0};

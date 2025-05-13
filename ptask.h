@@ -1,10 +1,14 @@
 /** Created for research project by Zachary Lee using the textbook for support
  * in the ptask library **/
+#include "timespec_helpers.h"
+
 #include <pthread.h>
 #include <semaphore.h>
+#include <sched.h>
 
 #define MAX_TASKS (10U)
 #define ACT (1U)
+#define PREEMPTIVE (1U)
 
 struct task_par {
   int arg;            // task index
