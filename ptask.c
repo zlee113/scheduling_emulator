@@ -18,7 +18,7 @@ void ptask_init(int policy) {
 }
 
 int task_create(void *(*task)(void *), int index, int period, int deadline,
-                int priority, int act_flag) {
+                int priority, long wcet, int act_flag) {
   pthread_attr_t myatt;
   struct sched_param mypar;
   int tret;
@@ -32,6 +32,7 @@ int task_create(void *(*task)(void *), int index, int period, int deadline,
   tp[index].period = period;
   tp[index].deadline = deadline;
   tp[index].priority = priority;
+  tp[index].wcet = wcet;
   tp[index].dmiss = 0;
 
   pthread_attr_init(&myatt);

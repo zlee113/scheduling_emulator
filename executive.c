@@ -6,6 +6,7 @@
 extern struct task_par tp[MAX_TASKS];
 
 void *periodic_task(void *arg);
+void *periodic_task_nonpreemptive(void *arg);
 
 void *periodic_task(void *arg) {
   int id;
@@ -15,29 +16,40 @@ void *periodic_task(void *arg) {
 
 
   while (1) {
-    printf("%ld: Task %d has started\n", get_systime(MILLI), id);
+    long start = get_systime(MILLI);
+    printf("%ld: Task %d has started\n", start, id);
     if (deadline_miss(id)) {
       printf("%ld: Task %d missed it's deadline\n", get_systime(MILLI), id);
     }
 
-    struct timespec ts = {0, 100*1000000};
-    nanosleep(&ts, NULL);
+    while ((get_systime(MILLI) - start) < tp[id].wcet){
+      /* Do nothing */
+    }
 
+
+    long end = get_systime(MILLI);
+    printf("%ld: Task %d finished with duration: %ld ms \n", get_systime(MILLI), id, end-start);
     /* wait for another period */
     wait_for_period(id);
   }
   return NULL;
 }
 
+void *periodic_task_nonpreemptive(void *arg){
+
+}
+
 int main() {
-  printf("Intializing ptask func\n");
+  printf("Initializing ptask func\n");
   ptask_init(0);
 
   printf("Startup at time: %ld\n", get_systime(MILLI));
 
-  task_create(periodic_task, 0, 100, 100, 30, ACT);
-  task_create(periodic_task, 1, 300, 300, 20, ACT);
-  task_create(periodic_task, 2, 1000, 1000, 10, ACT);
+  task_create(periodic_task, 0, 100, 50, 30, 50, ACT);
+  usleep(1000);
+  task_create(periodic_task, 1, 300, 300, 20, 100,ACT);
+  usleep(1000);
+  task_create(periodic_task, 2, 1000, 1000, 10, 300, ACT);
 
   for (int i = 0; i < 3; i++) {
     if (tp[i].tid) {

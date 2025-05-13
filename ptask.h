@@ -7,6 +7,7 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_TASKS (10U)
 #define ACT (1U)
@@ -19,7 +20,6 @@ struct task_par {
   int deadline;       // relative deadline
   int priority;       // task priority
   int act_flag;       // activation flag
-  int wcet;           // worst case execution time
   struct timespec at; // next activation time
   struct timespec dl; // absolute deadline
   int dmiss;          // deadline miss counter
@@ -41,7 +41,7 @@ void ptask_init(int policy);
  * @return
  */
 int task_create(void *(*task)(void *), int index, int period, int deadline,
-                int priority, int wcet, int act_flag);
+                int priority, long wcet, int act_flag);
 
 void task_activate(int id);
 
