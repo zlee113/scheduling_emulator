@@ -5,12 +5,14 @@
 #include <pthread.h>
 #include <sched.h>
 #include <semaphore.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#define MAX_TASKS (10U)
+#define MAX_TASKS (50U)
 #define ACT (1U)
+#define NON_ACT (0U)
 #define PREEMPTIVE (1U)
 
 struct task_par {
@@ -25,6 +27,8 @@ struct task_par {
   int dmiss;          // deadline miss counter
   sem_t asem;         // activation semaphore
   pthread_t tid;      // thread identifier
+  bool finished;
+  bool alive;
 };
 
 void ptask_init(int policy);
@@ -47,7 +51,7 @@ void task_activate(int id);
 
 void wait_for_activation(int id);
 
-int wait_for_period(int id);
+void wait_for_period(int id);
 
 void wait_for_task_end(int id);
 
@@ -66,6 +70,8 @@ void task_get_adline(int id, struct timespec *ad);
 void task_set_period(int id, int period);
 
 void task_set_deadline(int id, int deadline);
+
+void task_set_next_task();
 
 /**
  * @brief Function to get the current system time

@@ -6,6 +6,9 @@ struct task_par tp[MAX_TASKS] = {0};
 /* Global timing variable */
 struct timespec ptask_t0 = {0};
 
+/* Global current task variable */
+int current_task = 0;
+
 /* Global policy variable */
 int ptask_policy;
 
@@ -34,6 +37,8 @@ int task_create(void *(*task)(void *), int index, int period, int deadline,
   tp[index].priority = priority;
   tp[index].wcet = wcet;
   tp[index].dmiss = 0;
+  tp[index].finished = false;
+  tp[index].alive = true;
 
   pthread_attr_init(&myatt);
   pthread_attr_setinheritsched(&myatt, PTHREAD_EXPLICIT_SCHED);
@@ -52,7 +57,6 @@ int task_create(void *(*task)(void *), int index, int period, int deadline,
 
   if (act_flag == ACT) {
     task_activate(index);
-    printf("Task %d activated.\n", index);
   }
 
   return tret;
@@ -68,6 +72,7 @@ int get_task_index(void *arg) {
 void wait_for_activation(int id) {
   struct timespec t;
 
+  printf("Waiting for Task %d\n", id);
   sem_wait(&tp[id].asem);
 
   clock_gettime(CLOCK_MONOTONIC, &t);
@@ -77,7 +82,10 @@ void wait_for_activation(int id) {
   time_add_ms(&(tp[id].dl), tp[id].deadline);
 }
 
-void task_activate(int id) { sem_post(&tp[id].asem); }
+void task_activate(int id) {
+  printf("Task %d activated\n", id);
+  sem_post(&tp[id].asem);
+}
 
 int deadline_miss(int id) {
   struct timespec now;
@@ -90,7 +98,7 @@ int deadline_miss(int id) {
   return 0;
 }
 
-int wait_for_period(int id) {
+void wait_for_period(int id) {
   clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &(tp[id].at), NULL);
 
   time_add_ms(&(tp[id].at), tp[id].period);
@@ -110,6 +118,24 @@ void task_get_adline(int id, struct timespec *dl) { time_copy(dl, tp[id].dl); }
 void task_set_period(int id, int period) { tp[id].period = period; }
 
 void task_set_deadline(int id, int deadline) { tp[id].deadline = deadline; }
+
+void task_set_next_task() {
+  bool set = false;
+
+  for (int i = 0; i < MAX_TASKS; i++) {
+    if (!tp[i].finished && tp[i].alive) {
+      current_task = i;
+      task_activate(i);
+      set = true;
+      break;
+    }
+  }
+  if (!set) {
+    /* Check idle time */
+    current_task = -1;
+    printf("%ld: CPU Idle time\n", get_systime(MILLI));
+  }
+}
 
 long get_systime(int unit) {
   struct timespec t;
