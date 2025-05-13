@@ -27,8 +27,8 @@ struct task_par {
   int dmiss;          // deadline miss counter
   sem_t asem;         // activation semaphore
   pthread_t tid;      // thread identifier
-  bool finished;
-  bool alive;
+  bool finished;      // task finished flag
+  bool alive;         // task in use flag
 };
 
 void ptask_init(int policy);
